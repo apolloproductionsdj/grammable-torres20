@@ -1,6 +1,39 @@
 require 'rails_helper'
 
 RSpec.describe GramsController, type: :controller do
+  describe "grams#update action" do 
+    it "should allow for a gram to be updated successfully" do 
+      gram = FactoryBot.create(:gram, message: "Initial Value")
+      patch :update, params: { id: gram.id, gram: { message: 'New Value' } }
+      expect(response).to redirect_to root_path
+      gram.reload
+      expect(gram.message).to eq "New Value"
+    end
+    it "should return 404 for an update attempt for a gram that doesn't exist" do 
+      patch :update, params: { id: 'Nobody here!', gram: { message: "Nobody here either" } }
+      expect(response).to have_http_status(:not_found)
+    end
+    it "should handle validations for updates that are blank" do 
+      gram = FactoryBot.create(:gram, message: "Message that isn't blank")
+      patch :update, params: { id: gram.id, gram: { message: '' } }
+      expect(response).to have_http_status(:unprocessable_entity) 
+      gram.reload
+      expect(gram.message).to eq "Message that isn't blank"     
+    end
+  end 
+
+  describe "grams#edit action" do 
+    it "should show the edit form for a gram that is in our database" do 
+      gram = FactoryBot.create(:gram)
+      get :edit, params: { id: gram.id }  
+      expect(response).to have_http_status(:success)
+    end
+    it "should return a 404 error for a gram that not in the database" do 
+      get :edit, params: { id: "This is not in the database" }
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe "grams#show action" do 
     it "should successfully show the gram that is in our database" do 
       gram = FactoryBot.create(:gram)
